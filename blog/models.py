@@ -15,9 +15,8 @@ class Blog(models.Model):
     title = models.CharField(max_length=150)
     description = models.TextField()
     hashtags = models.TextField()
-    comments = models.CharField(max_length=500)
 
 class Comment(models.Model):
     text = models.TextField()
-    blog = models.ForeignKey(Blog, on_delete=models.CASCADE)
     datetime = models.DateTimeField(auto_now=True)
+    blog = models.ForeignKey(Blog, on_delete=models.CASCADE)

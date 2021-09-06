@@ -5,11 +5,14 @@ from django.shortcuts import render
 # Create your views here.
 from datetime import datetime
 from django.conf import settings
-from django.http import HttpResponse, FileResponse
+from django.http import HttpResponse, FileResponse, HttpResponseRedirect
 import random
-from .models import Student, Blog, Comment
+from .models import *
 from django.shortcuts import redirect
 from django.views import generic
+from rest_framework.generics import ListAPIView
+from .forms import *
+
 
 
 class BlogView(generic.ListView):
@@ -17,7 +20,7 @@ class BlogView(generic.ListView):
     queryset = Blog.objects.all()
     context_object_name = "posts"
 
-class BlogDetailView(generic.DetailView):
+class BlogDetailView(generic.DetailView, generic.CreateView):
     template_name = "detail-post.html"
     queryset = Blog.objects.all()
     context_object_name = "post"
@@ -31,8 +34,13 @@ class BlogDetailView(generic.DetailView):
         return context
 
 
-    def post(self, request, *args, **kwargs):
-        pass
+    def post(self, request, **kwargs):
+        if request.method == "POST":
+            # context = super(BlogDetailView, self).get_context_data(**kwargs)
+            form = self.request.POST
+            comment = form['comments']
+            Comment.objects.create(text=comment, blog_id=self.kwargs['pk'])
+            return HttpResponseRedirect('/blog/')
 
 
 
@@ -73,8 +81,12 @@ def create_post(request):
         description = form['description']
         hashtags = form['hashtags']
         image = request.FILES['image']
-        comments = form['comments']
-        Blog.objects.create(title=title, description=description, hashtags=hashtags, image=image, comments=comments)
+        Blog.objects.create(title=title, description=description, hashtags=hashtags, image=image)
         return redirect('/blog/')
     if request.method == "GET":
         return render(request, 'create.html')
+
+
+class BlogListApiView(ListAPIView):
+    queryset = Blog.objects.all()
+    serializer_class = BlogSerializer
